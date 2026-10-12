@@ -81,10 +81,25 @@ backend never signs anyone in: the browser does.
 
 ## Developing
 
-This repository is a git submodule of the Murkio identity service
-(`libs/external/ruby`). The tests run from that checkout: they read the token vectors
-every Murkio server SDK shares (`libs/spec/server`).
-
 ```sh
 ruby -w -Ilib -Itest test/test_murkio.rb
 ```
+
+The tests read the token vectors every Murkio server SDK shares. That copy (`spec/`) and
+the checks in `infra/pipeline/` are kept in the Murkio identity service and synced from
+there, so they are not edited here.
+
+Every pull request runs the workflows in `.github/workflows`. The same checks, locally
+(`bundle install` brings the tools):
+
+| Workflow | What it runs |
+| --- | --- |
+| Build | `gem build murkio.gemspec --strict`, then requires the gem from what was packaged; on Ruby 3.1 and 4.0 |
+| Format | `bundle exec rubocop --only Layout` |
+| Lint | `bundle exec rubocop` |
+| Tests | the suite, with warnings on, on Ruby 3.1 and 4.0 |
+| Quality & Governance Checks | `for check in infra/pipeline/*.py; do python3 "$check"; done` |
+| Security | `bundle exec bundle-audit check --update`, `gitleaks git .`, `zizmor --pedantic .` |
+| CodeQL, Dependency Review | run by GitHub on the pull request |
+
+Security reports: see [SECURITY.md](SECURITY.md).
