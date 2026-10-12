@@ -14,6 +14,8 @@ import re
 import sys
 from pathlib import Path
 
+# The checks leave nothing behind in the repository they inspect.
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).parent / "lib"))
 import sdk  # noqa: E402
 
