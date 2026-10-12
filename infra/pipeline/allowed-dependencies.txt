@@ -1,0 +1,5 @@
+# The runtime dependencies this SDK ships with, one per line, each with the
+# reason it is needed. infra/pipeline/verify_dependencies.py fails when the
+# manifest and this list disagree.
+#
+# None: the Ruby SDK uses only the standard library (OpenSSL verifies Ed25519).
