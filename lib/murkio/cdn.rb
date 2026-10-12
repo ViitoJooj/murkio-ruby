@@ -7,6 +7,6 @@ module Murkio
   module Cdn
     VERSION = "0.1.0"
     URL = "https://cdn.jsdelivr.net/npm/@murkio/html@0.1.0/dist/murkio.js"
-    INTEGRITY = "sha384-xj1fPXqqyxakYONrZDGRRwz/NSyJG+xTFUz0jpHCOfWGDxNWl8sDFUaL6D5GAD4B"
+    INTEGRITY = "sha384-c1uw6fHl7lO2UKbhw6gSkHmvLuJTh9DD3fAzRYZnHSUwhMuN5I8H2BnyGrYlnoMa"
   end
 end
