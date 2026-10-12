@@ -6,6 +6,7 @@ require "openssl"
 require "securerandom"
 require "uri"
 
+# The client: tells who is behind a request and writes the login components.
 module Murkio
   DEFAULT_API_URL = "https://api.mukio.com"
 
@@ -69,16 +70,14 @@ module Murkio
 
     def initialize(publishable_key: nil, api_url: nil, cookie_domain: nil, script_url: nil, integrity: nil, timeout: 10, transport: nil)
       key = publishable_key || ENV.fetch("MURKIO_PUBLISHABLE_KEY", "")
-      unless key.start_with?("pk_")
-        raise ArgumentError, "murkio: set publishable_key (or MURKIO_PUBLISHABLE_KEY) to the application's publishable key (pk_...)"
-      end
+      raise ArgumentError, "murkio: set publishable_key (or MURKIO_PUBLISHABLE_KEY) to the application's publishable key (pk_...)" unless key.start_with?("pk_")
 
       @publishable_key = key
       @api_url = (api_url || ENV["MURKIO_API_URL"] || DEFAULT_API_URL).sub(%r{/+\z}, "")
       @key_hash = Murkio.fnv1a32(key)
       @cookie_domain = cookie_domain
-      @script_url = script_url || ENV["MURKIO_SCRIPT_URL"]
-      @integrity = integrity || ENV["MURKIO_SCRIPT_INTEGRITY"]
+      @script_url = script_url || ENV.fetch("MURKIO_SCRIPT_URL", nil)
+      @integrity = integrity || ENV.fetch("MURKIO_SCRIPT_INTEGRITY", nil)
       @transport = transport || method(:http_transport)
       @timeout = timeout
       @mutex = Mutex.new
@@ -255,14 +254,14 @@ module Murkio
     # it. <, >, & and the U+2028/U+2029 separators become \u escapes, so the
     # JSON cannot end the <script> tag.
     def bootstrap_script
-      json = JSON.generate(bootstrap).gsub(/[<>&  ]/) { |char| format("\\u%04x", char.ord) }
+      json = JSON.generate(bootstrap).gsub(/[<>&\u2028\u2029]/) { |char| format("\\u%04x", char.ord) }
       stamp = (Time.now.to_f * 1000).to_i
       safe(%(<script type="application/json" id="murkio-bootstrap" data-generated-at="#{stamp}">#{json}</script>))
     end
 
     # <murkio-identity-canvas>: the login canvas designed in the dashboard.
     def canvas(screen: nil, class_name: nil, locale: nil, light_dom: false)
-      safe("<murkio-identity-canvas#{attributes(screen: screen, class: class_name, locale: locale)}#{light_dom ? ' light-dom' : ''}></murkio-identity-canvas>")
+      safe("<murkio-identity-canvas#{attributes(screen: screen, class: class_name, locale: locale)}#{' light-dom' if light_dom}></murkio-identity-canvas>")
     end
 
     def email_input(class_name: nil, placeholder: nil, label: nil, form: nil)
@@ -415,9 +414,13 @@ module Murkio
     def handshake_response(scheme)
       nonce = SecureRandom.urlsafe_base64(16)
       script = URI.parse(@script_url || Cdn::URL)
-      script_origin = script.host ? "#{script.scheme}://#{script.host}#{script.port == script.default_port ? '' : ":#{script.port}"}" : "https://cdn.jsdelivr.net"
+      script_origin = if script.host
+                        "#{script.scheme}://#{script.host}#{":#{script.port}" unless script.port == script.default_port}"
+                      else
+                        "https://cdn.jsdelivr.net"
+                      end
       api = URI.parse(@api_url)
-      api_origin = "#{api.scheme}://#{api.host}#{api.port == api.default_port ? '' : ":#{api.port}"}"
+      api_origin = "#{api.scheme}://#{api.host}#{":#{api.port}" unless api.port == api.default_port}"
       page = <<~HTML.chomp
         <!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title></title>
         #{script_tag(nonce: nonce)}
@@ -430,7 +433,7 @@ module Murkio
           "content-type" => "text/html; charset=utf-8",
           "cache-control" => "no-store",
           "content-security-policy" => "default-src 'none'; script-src 'nonce-#{nonce}' #{script_origin}; connect-src #{api_origin}; base-uri 'none'; frame-ancestors 'none'",
-          "set-cookie" => "#{HANDSHAKE_GUARD}=1; Path=/; Max-Age=30; SameSite=Lax#{scheme == 'https' ? '; Secure' : ''}"
+          "set-cookie" => "#{HANDSHAKE_GUARD}=1; Path=/; Max-Age=30; HttpOnly; SameSite=Lax#{'; Secure' if scheme == 'https'}"
         },
         body: page
       )
@@ -441,6 +444,7 @@ module Murkio
     end
 
     HTML_ESCAPES = { "&" => "&amp;", "<" => "&lt;", ">" => "&gt;", '"' => "&quot;", "'" => "&#39;" }.freeze
+    private_constant :HTML_ESCAPES
 
     def escape(value)
       value.gsub(/[&<>"']/, HTML_ESCAPES)
@@ -449,9 +453,9 @@ module Murkio
     def script_tag(nonce: nil, after_login: nil, locale: nil, oauth_redirect_url: nil)
       integrity = @script_url ? @integrity : Cdn::INTEGRITY
       "<script#{attributes(
-        "src" => @script_url || Cdn::URL, "integrity" => integrity, "crossorigin" => (present?(integrity) ? 'anonymous' : nil),
-        "nonce" => nonce, "data-murkio-key" => @publishable_key, "data-murkio-api" => @api_url, "data-murkio-locale" => locale,
-        "data-murkio-after-login" => after_login, "data-murkio-oauth-redirect" => oauth_redirect_url
+        'src' => @script_url || Cdn::URL, 'integrity' => integrity, 'crossorigin' => (present?(integrity) ? 'anonymous' : nil),
+        'nonce' => nonce, 'data-murkio-key' => @publishable_key, 'data-murkio-api' => @api_url, 'data-murkio-locale' => locale,
+        'data-murkio-after-login' => after_login, 'data-murkio-oauth-redirect' => oauth_redirect_url
       )}></script>"
     end
 
@@ -462,6 +466,7 @@ module Murkio
     # Rails prints a String escaped unless it is html_safe. The helpers build
     # escaped markup, so they mark it safe when ActiveSupport is loaded.
     def safe(markup)
+      # murkio:allow dangerous-sink every helper escapes its attribute values before it gets here
       markup.respond_to?(:html_safe) ? markup.html_safe : markup
     end
   end
