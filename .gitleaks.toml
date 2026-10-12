@@ -1,0 +1,8 @@
+# The secret scan (the Security workflow) uses the default gitleaks rules. A
+# path is listed here only when what it holds looks like a secret and is not.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "The tokens of the shared test vectors are signed by a throwaway key and open nothing"
+paths = ['''^spec/''']

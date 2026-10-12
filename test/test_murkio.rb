@@ -6,7 +6,7 @@ require "openssl"
 require "murkio"
 
 KEY = "pk_ruby_test"
-VECTORS = JSON.parse(File.read(File.expand_path("../../../spec/server/vectors.json", __dir__)))
+VECTORS = JSON.parse(File.read(File.expand_path("../spec/server/vectors.json", __dir__)))
 
 def b64(value)
   [value].pack("m0").tr("+/", "-_").delete("=")
@@ -33,11 +33,13 @@ class FakeApi
     when "/v1/client"
       return [401, JSON.generate(details: [{ code: "bss-01" }])] unless headers["Authorization"] == "Bearer #{KEY}"
 
-      document = { note: "</script><b>& " }
+      document = { note: "</script><b>&\u2028" }
       [200, JSON.generate(data: { application_id: @application, issuer: @issuer, jwks_url: "/jwks.json", config: {}, canvas: { version: 0, document: document } })]
     when "/jwks.json" then [200, JSON.generate(@jwks)]
     when "/v1/me"
-      [200, JSON.generate(data: { id: "user-1", session_id: "session-1", email: "ana@example.com", email_verified: true, roles: ["user"], mfa_enabled: false, created_at: "2026-10-10T00:00:00Z" })]
+      [200,
+       JSON.generate(data: { id: "user-1", session_id: "session-1", email: "ana@example.com", email_verified: true, roles: ["user"], mfa_enabled: false,
+                             created_at: "2026-10-10T00:00:00Z" })]
     when "/v1/sessions/verify"
       [200, JSON.generate(data: { active: !@revoked[JSON.parse(body)["access_token"]] })]
     else [404, "{}"]
@@ -61,7 +63,7 @@ def request(method = "GET", headers: {}, cookies: {}, host: "app.example.com", s
 end
 
 class SharedVectorsTest < Minitest::Test
-  # The same tokens must get the same verdict in every server SDK (libs/spec/server).
+  # The same tokens must get the same verdict in every server SDK (spec/server).
   def test_cookie_hash
     VECTORS["cookie_hash"].each { |value, expected| assert_equal expected, Murkio.fnv1a32(value) }
   end
@@ -174,6 +176,7 @@ class ClientTest < Minitest::Test
     assert_includes response.body, %(data-murkio-key="#{KEY}")
     assert_includes response.headers["content-security-policy"], "connect-src https://api.example.com;"
     assert_includes response.headers["set-cookie"], "murkio_handshake=1"
+    assert_includes response.headers["set-cookie"], "HttpOnly"
     assert_equal "no-store", response.headers["cache-control"]
 
     assert_equal 401, @client.protect(**request(headers: @page, cookies: hint.merge("murkio_handshake" => "1")), required: true)[1].status
@@ -187,15 +190,16 @@ class ClientTest < Minitest::Test
     assert_includes head, %(data-murkio-after-login="/home")
     assert_equal "<murkio-identity-canvas></murkio-identity-canvas>", @client.canvas
     assert_equal %(<murkio-identity-canvas class="&quot; onload=&quot;x" light-dom></murkio-identity-canvas>), @client.canvas(class_name: %(" onload="x), light_dom: true)
-    assert_equal %(<murkio-identity-email-input class="input" placeholder="you@example.com"></murkio-identity-email-input>), @client.email_input(class_name: "input", placeholder: "you@example.com")
+    assert_equal %(<murkio-identity-email-input class="input" placeholder="you@example.com"></murkio-identity-email-input>),
+                 @client.email_input(class_name: "input", placeholder: "you@example.com")
     assert_equal %(<murkio-identity-login-button class="btn" label="Entrar"></murkio-identity-login-button>), @client.login_button("Entrar", class_name: "btn")
 
     inline = @client.bootstrap_script
     refute_includes inline, "</script><b>"
     assert_includes inline, "data-generated-at="
-    payload = inline[/>(.*)<\/script>\z/m, 1]
-    refute_includes payload, " "
-    assert_equal "</script><b>& ", JSON.parse(payload)["canvas"]["document"]["note"]
+    payload = inline[%r{>(.*)</script>\z}m, 1]
+    refute_includes payload, "\u2028"
+    assert_equal "</script><b>&\u2028", JSON.parse(payload)["canvas"]["document"]["note"]
     refute_includes @api.client(script_url: "https://static.example.com/murkio.js").head, "integrity"
   end
 end

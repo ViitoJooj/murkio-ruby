@@ -1,0 +1,118 @@
+{
+  "description": "Access token verification vectors for the server SDKs. The key is a test key; see libs/scripts/gen-token-vectors.mjs.",
+  "application_id": "018f0000-0000-7000-8000-000000000001",
+  "issuer": "enterprise-auth",
+  "jwks": {
+    "keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "ebVWLo_mVPlAeLES6KmLp5AfhTrmlb7X4OORC60ElmQ",
+        "kid": "test-key-1",
+        "alg": "EdDSA",
+        "use": "sig"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "valid",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.o6MdRVxPbvl5DncrIXvFM95IKFSKEbd149g8UnJ_L8d7lfEw4iT6RPGpZH2v5qVLAoB9WRSH7878FrqUs7DODA",
+      "expect": "valid",
+      "session": {
+        "user_id": "user-1",
+        "session_id": "session-1",
+        "roles": [
+          "user",
+          "admin"
+        ]
+      }
+    },
+    {
+      "name": "valid without roles",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoidG9rZW4tMSJ9.OdsdxE513GJMJo2ICh45fKae8qQDMsbk0mei-n4HeZUoyHnb-2CpK7RAM2lHXtjO2HUJEMkiyYgIA2m2q9C3AQ",
+      "expect": "valid",
+      "session": {
+        "user_id": "user-1",
+        "session_id": "session-1",
+        "roles": []
+      }
+    },
+    {
+      "name": "expired",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjE1Nzc4MzY4MDAsImp0aSI6InRva2VuLTEifQ.As_VP0P0oATTzPxJF_R8y-o4JJ4VIWN4gFl6jEY2M7aK5QMXjnSmnPFpdvkC4BJXe6vcPbkd3jLdFILJdRr3AA",
+      "expect": "expired"
+    },
+    {
+      "name": "another application",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDIiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.vnwnr11DNWbkILhKK1GYu7lCyWgjfFEY_4E0AjLs8rlM2Ye8wySgguoPMV4muZg_ArWb9qbV7ssw4qgYygb8Ag",
+      "expect": "rejected"
+    },
+    {
+      "name": "another issuer",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJzb21lb25lLWVsc2UiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.nizbrgmxDobV2qqCDwqLrRF4NLRtYqCYSmUwI-vnyarCqScxMrXpVfeKSbDQC3jTBM4VM-v5pnnL-kkoM5FWCg",
+      "expect": "rejected"
+    },
+    {
+      "name": "alg none",
+      "token": "eyJhbGciOiJub25lIiwia2lkIjoidGVzdC1rZXktMSJ9.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.",
+      "expect": "rejected"
+    },
+    {
+      "name": "alg HS256",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ._dKUY1uyVUiaGEadl23mMc9fH3TpRMM8RVvHNRk3iOyM76YoOMHUASCu1WpSmKwov7EUY8NkMy8Hgv9fBkm_Dw",
+      "expect": "rejected"
+    },
+    {
+      "name": "unknown kid",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6Im90aGVyLWtleSJ9.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.9ShUDGKfLPG89HK4aovYAysuPQGH-R-EwZjeIcquo7KHxemCpWXL3Y3TByglh3wy5FQ45f6SHApf4o6K94zgCg",
+      "expect": "rejected"
+    },
+    {
+      "name": "bad signature",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.o6MdRVxPbvl5DncrIXvFM95IKFSKEbd149g8UnJ_L8d7lfEw4iT6RPGpZH2v5qVLAoB9WRSH7878FrqUs7DOAA",
+      "expect": "rejected"
+    },
+    {
+      "name": "tampered payload",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJvd25lciJdLCJpYXQiOjE1Nzc4MzY4MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoidG9rZW4tMSJ9.o6MdRVxPbvl5DncrIXvFM95IKFSKEbd149g8UnJ_L8d7lfEw4iT6RPGpZH2v5qVLAoB9WRSH7878FrqUs7DODA",
+      "expect": "rejected"
+    },
+    {
+      "name": "missing subject",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.Pdy7ZG3aS3W5bOF5ZwDIAyagcWbfnwp80FIzCN1kItdlrJdXBoD8DIPFCeHAT0HSl2NjCBAL5EjZxPlmZeAHCg",
+      "expect": "rejected"
+    },
+    {
+      "name": "missing session",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ.ieAYBhQ_1qWaZcK7zXFZ0OECuuE3dlssM3sODcWmbe8xxFTKxIoiqQHvesk1XJeGu2g6-p5m_GnnqsStamBMBQ",
+      "expect": "rejected"
+    },
+    {
+      "name": "missing expiry",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJqdGkiOiJ0b2tlbi0xIn0.ir_Y4i-3t8Wzt34ro9GH8PnNasyQLdOJ23zytVkyVo30t_7fAkstfs-A-3Cla5gtU-R6NESE8BjOUy7q5HbQBw",
+      "expect": "rejected"
+    },
+    {
+      "name": "two parts",
+      "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6InRlc3Qta2V5LTEifQ.eyJpc3MiOiJlbnRlcnByaXNlLWF1dGgiLCJzdWIiOiJ1c2VyLTEiLCJhdWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhaWQiOiIwMThmMDAwMC0wMDAwLTcwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJzaWQiOiJzZXNzaW9uLTEiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwiaWF0IjoxNTc3ODM2ODAwLCJleHAiOjQxMDI0NDQ4MDAsImp0aSI6InRva2VuLTEifQ",
+      "expect": "rejected"
+    },
+    {
+      "name": "not a token",
+      "token": "not-a-token",
+      "expect": "rejected"
+    },
+    {
+      "name": "empty",
+      "token": "",
+      "expect": "rejected"
+    }
+  ],
+  "cookie_hash": {
+    "": "811c9dc5",
+    "a": "e40c292c",
+    "foobar": "bf9cf968",
+    "pk_test_vector": "ed6afb31"
+  }
+}

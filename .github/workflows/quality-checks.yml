@@ -1,0 +1,59 @@
+name: Quality & Governance Checks
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  discover-checks:
+    name: Discover Validation Scripts
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: List validation scripts
+        id: set-matrix
+        run: |
+          FILES=$(find infra/pipeline -maxdepth 1 -type f -name "*.py" | sort | jq -R . | jq -s -c .)
+          echo "Scripts found: $FILES"
+          echo "matrix=$FILES" >> "$GITHUB_OUTPUT"
+
+  run-checks:
+    name: "Check: ${{ matrix.script }}"
+    needs: discover-checks
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        script: ${{ fromJson(needs.discover-checks.outputs.matrix) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Run validation
+        env:
+          SCRIPT: ${{ matrix.script }}
+        run: python "$SCRIPT"
